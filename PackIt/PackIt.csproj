@@ -119,6 +119,57 @@
   <ItemGroup>
     <Resource Include="Images\file.png" />
   </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\send.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\not_connected.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\connected.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\connect.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\disconnect.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\clear.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\hex.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\ascii.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\transmit.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\receive.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\port.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\bug.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\ascii_not.png" />
+    <Resource Include="Images\connect_not.png" />
+    <Resource Include="Images\file_not.png" />
+    <Resource Include="Images\hex_not.png" />
+    <Resource Include="Images\receive_not.png" />
+    <Resource Include="Images\send_not.png" />
+    <Resource Include="Images\transmit_not.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\connected2.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\leave.png" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -12,6 +13,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using Microsoft.Win32;
 
 namespace PackIt
 {
@@ -28,7 +30,10 @@ namespace PackIt
         private void Window_MouseDown(object sender, MouseButtonEventArgs e)
         {
             if (e.ChangedButton == MouseButton.Left)
+            {
+                e.Handled = true;
                 this.DragMove();
+            }
         }
 
         private void Close_MouseDown(object sender, MouseButtonEventArgs e)
@@ -39,6 +44,17 @@ namespace PackIt
         private void Mini_MouseDown(object sender, MouseButtonEventArgs e)
         {
             WindowState = WindowState.Minimized;
+        }
+
+        private void File_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            var openFileDialog = new OpenFileDialog();
+            if (openFileDialog.ShowDialog() == true)
+                FileName.Content = openFileDialog.FileName;
+        }
+
+        private void Send_MouseDown(object sender, MouseButtonEventArgs e)
+        {
         }
     }
 }
