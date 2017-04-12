@@ -478,10 +478,10 @@ namespace PackIt
             switch (mode)
             {
                 case ErrorRecovery.CRCRecovery:
-                    packet[6] = (byte) ((uint) packet[6] + 1U);
+                    packet[6]++;
                     return true;
                 case ErrorRecovery.CRCNoRecovery:
-                    packet[6] = (byte) ((uint) packet[6] + 1U);
+                    packet[6]++;
                     return false;
                 case ErrorRecovery.SOHRecovery:
                     packet[0] = (byte) 2;
@@ -648,6 +648,7 @@ namespace PackIt
 
                         if (_totalLeft < 1)
                         {
+                            // TODO: Only check CRC byte for 0
                             if (new CRC_Class(_data).crcCalc() == 0)
                             {
                                 response[0] = ACK;
@@ -673,6 +674,7 @@ namespace PackIt
 
                                 foreach (var bytes in _data)
                                 {
+                                    // TODO: Only check CRC byte for EOT
                                     if (bytes == EOT)
                                     {
                                         if (!string.IsNullOrEmpty(_receiver.FileToSave))
@@ -694,12 +696,17 @@ namespace PackIt
                                                             if (bagets[i] == EOT)
                                                                 count = i - 1;
                                                         }
+                                                        // Append just data no soh or crc
                                                         stringBuilder.Append(charlie, 1, count);
                                                     }
-                                                    StreamWriter streamWriter =
-                                                        new StreamWriter((Stream) File.Create(_receiver.FileToSave));
-                                                    streamWriter.Write((object) stringBuilder);
-                                                    streamWriter.Close();
+                                                    var dest = new char[stringBuilder.Length];
+                                                    stringBuilder.CopyTo(0, dest, 0, stringBuilder.Length);
+                                                    var final = new byte[dest.Length];
+                                                    for(var i = 0; i < dest.Length; i++)
+                                                    {
+                                                        final[i] = (byte) dest[i];
+                                                    }
+                                                    File.WriteAllBytes(_receiver.FileToSave, final);
                                                     Dispatcher.Invoke(delegate {
                                                         TextDisplay.AppendText("Successful transfer\n");
                                                         StatusBarCOMPORT.Content = "File Successfully Saved!";
