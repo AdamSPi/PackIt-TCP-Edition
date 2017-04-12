@@ -306,7 +306,7 @@ namespace PackIt
                 var acknowledge = new byte[1] {ACK};
                 var noAcknowledge = new byte[1] {NAK};
 
-                while (iter < _transmitter.SendPackets.Count && numOfErrors < 3)
+                while (numOfErrors < 3 && iter < _transmitter.SendPackets.Count )
                 {
                     var sendPacket = _transmitter.SendPackets[iter];
 
@@ -358,7 +358,7 @@ namespace PackIt
                     {
                         numOfErrors++;
                         var to = new TextRange(TextDisplay.Document.ContentEnd, TextDisplay.Document.ContentEnd);
-                        to.Text = "TIMEOUT";
+                        to.Text = "TIMEOUT\n";
                         to.ApplyPropertyValue(TextElement.ForegroundProperty, Brushes.DarkRed);
                         TextDisplay.ScrollToEnd();
                         continue;
@@ -366,7 +366,7 @@ namespace PackIt
                     catch (Exception err)
                     {
                         var pc = new TextRange(TextDisplay.Document.ContentEnd, TextDisplay.Document.ContentEnd);
-                        pc.Text = "Port closed";
+                        pc.Text = "Port closed\n";
                         pc.ApplyPropertyValue(TextElement.ForegroundProperty, Brushes.DarkRed);
                         TextDisplay.ScrollToEnd();
 
@@ -701,6 +701,7 @@ namespace PackIt
                                                     streamWriter.Write((object) stringBuilder);
                                                     streamWriter.Close();
                                                     Dispatcher.Invoke(delegate {
+                                                        TextDisplay.AppendText("Successful transfer\n");
                                                         StatusBarCOMPORT.Content = "File Successfully Saved!";
                                                     });
                                                 }
