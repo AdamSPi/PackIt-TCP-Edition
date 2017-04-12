@@ -38,8 +38,8 @@
     <ApplicationIcon>packet.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="CRC8">
-      <HintPath>.\CRC8.dll</HintPath>
+    <Reference Include="CRC_Class">
+      <HintPath>.\CRC_Class.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
@@ -61,6 +61,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Packet.cs" />
     <Compile Include="Receive.cs" />
     <Compile Include="Transmit.cs" />
     <Page Include="MainWindow.xaml">
@@ -169,6 +170,16 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Images\leave.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\port_not.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\clear_not.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="Images\test.png" />
+    <Resource Include="Images\test_not.png" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
