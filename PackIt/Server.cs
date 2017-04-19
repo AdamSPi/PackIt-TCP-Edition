@@ -80,29 +80,25 @@ namespace PackIt
         // Start listening on socket for client connections/data
         public async void SocketListener()
         {
-            try
-            {
-                var sockListener = new TcpListener(addr, portNumber);
-                sockListener.Start();
+            var sockListener = new TcpListener(addr, portNumber);
+            sockListener.Start();
 
-                // Buffer for reading data
-                string data = null;
 
-                // Wait for connection to establish
-                ConnectededClient = await sockListener.AcceptTcpClientAsync();
+            // Wait for connection to establish
+            ConnectededClient = await sockListener.AcceptTcpClientAsync();
 
-                await Application.Current.Dispatcher.BeginInvoke(
-                    DispatcherPriority.Background,
-                    new Action(() =>
-                    {
-                        ((MainWindow) System.Windows.Application.Current.MainWindow).TextDisplay.AppendText(
-                            "Client connected from " + ConnectededClient.Client.RemoteEndPoint + "\n");
-                    })
-                );
-
-                Streamer = ConnectededClient.GetStream();
-                while (true)
+            await Application.Current.Dispatcher.BeginInvoke(
+                DispatcherPriority.Background,
+                new Action(() =>
                 {
+                    ((MainWindow)System.Windows.Application.Current.MainWindow).TextDisplay.AppendText(
+                        "Client connected from " + ConnectededClient.Client.RemoteEndPoint + "\n");
+                })
+            );
+
+            while (true)
+            {
+                    Streamer = ConnectededClient.GetStream();
                     var packet = new byte[7];
                     var response = new byte[1];
                     while (Streamer.DataAvailable)
@@ -153,24 +149,23 @@ namespace PackIt
                                     DispatcherPriority.Background,
                                     new Action(() =>
                                         {
-                                            switch (((MainWindow) System.Windows.Application.Current.MainWindow).IsHex)
+                                            if (((MainWindow) System.Windows.Application.Current.MainWindow).IsHex)
                                             {
-                                                case true:
-                                                    var hx =
-                                                        new TextRange(
-                                                            ((MainWindow) System.Windows.Application.Current.MainWindow)
-                                                            .TextDisplay.Document.ContentEnd,
-                                                            ((MainWindow) System.Windows.Application.Current.MainWindow)
-                                                            .TextDisplay.Document.ContentEnd);
-                                                    hx.Text = " Recv: " +
-                                                              BitConverter.ToString(packet).Replace('-', ' ') + "\n";
-                                                    hx.ApplyPropertyValue(TextElement.ForegroundProperty,
-                                                        Brushes.DarkRed);
-                                                    ((MainWindow) System.Windows.Application.Current.MainWindow)
-                                                        .TextDisplay.ScrollToEnd();
-                                                    break;
-                                                case false:
-                                                    var tx =
+                                                var hx =
+                                                    new TextRange(
+                                                        ((MainWindow) System.Windows.Application.Current.MainWindow)
+                                                        .TextDisplay.Document.ContentEnd,
+                                                        ((MainWindow) System.Windows.Application.Current.MainWindow)
+                                                        .TextDisplay.Document.ContentEnd);
+                                                hx.Text = " Recv: " +
+                                                          BitConverter.ToString(packet).Replace('-', ' ') + "\n";
+                                                hx.ApplyPropertyValue(TextElement.ForegroundProperty,
+                                                    Brushes.DarkRed);
+                                                ((MainWindow) System.Windows.Application.Current.MainWindow)
+                                                    .TextDisplay.ScrollToEnd();
+                                            }
+                                            else { 
+                                               var tx =
                                                         new TextRange(
                                                             ((MainWindow) System.Windows.Application.Current.MainWindow)
                                                             .TextDisplay.Document.ContentEnd,
@@ -182,7 +177,6 @@ namespace PackIt
                                                         Brushes.DarkRed);
                                                     ((MainWindow) System.Windows.Application.Current.MainWindow)
                                                         .TextDisplay.ScrollToEnd();
-                                                    break;
                                             }
                                         }
                                     )
@@ -222,26 +216,23 @@ namespace PackIt
                                             DispatcherPriority.Background,
                                             new Action(() =>
                                             {
-                                                switch (
-                                                    ((MainWindow) System.Windows.Application.Current.MainWindow).IsHex)
+                                                if(((MainWindow) System.Windows.Application.Current.MainWindow).IsHex)
                                                 {
-                                                    case true:
-                                                        ((MainWindow) System.Windows.Application.Current.MainWindow)
-                                                            .TextDisplay.AppendText(
-                                                                "Recv: " +
-                                                                BitConverter.ToString(_data).Replace('-', ' ') +
-                                                                "\n");
-                                                        ((MainWindow) System.Windows.Application.Current.MainWindow)
-                                                            .TextDisplay.ScrollToEnd();
-                                                        break;
-                                                    case false:
+                                                    ((MainWindow) System.Windows.Application.Current.MainWindow)
+                                                        .TextDisplay.AppendText(
+                                                            "Recv: " +
+                                                            BitConverter.ToString(_data).Replace('-', ' ') +
+                                                            "\n");
+                                                    ((MainWindow) System.Windows.Application.Current.MainWindow)
+                                                        .TextDisplay.ScrollToEnd();
+                                                }
+                                                else{ 
                                                         ((MainWindow) System.Windows.Application.Current.MainWindow)
                                                             .TextDisplay.AppendText(
                                                                 "Recv: " + System.Text.Encoding.ASCII.GetString(_data) +
                                                                 "\n");
                                                         ((MainWindow) System.Windows.Application.Current.MainWindow)
                                                             .TextDisplay.ScrollToEnd();
-                                                        break;
                                                 }
                                             })
                                         );
@@ -330,27 +321,25 @@ namespace PackIt
                                             DispatcherPriority.Background,
                                             new Action(() =>
                                             {
-                                                switch (
-                                                    ((MainWindow) System.Windows.Application.Current.MainWindow).IsHex)
+                                                if(((MainWindow) System.Windows.Application.Current.MainWindow).IsHex)
                                                 {
-                                                    case true:
-                                                        var hx =
-                                                            new TextRange(
-                                                                ((MainWindow)
-                                                                    System.Windows.Application.Current.MainWindow)
-                                                                .TextDisplay.Document.ContentEnd,
-                                                                ((MainWindow)
-                                                                    System.Windows.Application.Current.MainWindow)
-                                                                .TextDisplay.Document.ContentEnd);
-                                                        hx.Text = " Recv: " +
-                                                                  BitConverter.ToString(_data).Replace('-', ' ') + "\n";
-                                                        hx.ApplyPropertyValue(TextElement.ForegroundProperty,
-                                                            Brushes.DarkRed);
-                                                        ((MainWindow) System.Windows.Application.Current.MainWindow)
-                                                            .TextDisplay.ScrollToEnd();
-                                                        break;
-                                                    case false:
-                                                        var tx =
+                                                    var hx =
+                                                        new TextRange(
+                                                            ((MainWindow)
+                                                                System.Windows.Application.Current.MainWindow)
+                                                            .TextDisplay.Document.ContentEnd,
+                                                            ((MainWindow)
+                                                                System.Windows.Application.Current.MainWindow)
+                                                            .TextDisplay.Document.ContentEnd);
+                                                    hx.Text = " Recv: " +
+                                                              BitConverter.ToString(_data).Replace('-', ' ') + "\n";
+                                                    hx.ApplyPropertyValue(TextElement.ForegroundProperty,
+                                                        Brushes.DarkRed);
+                                                    ((MainWindow) System.Windows.Application.Current.MainWindow)
+                                                        .TextDisplay.ScrollToEnd();
+                                                }
+                                                else { 
+                                                    var tx =
                                                             new TextRange(
                                                                 ((MainWindow)
                                                                     System.Windows.Application.Current.MainWindow)
@@ -364,7 +353,6 @@ namespace PackIt
                                                             Brushes.DarkRed);
                                                         ((MainWindow) System.Windows.Application.Current.MainWindow)
                                                             .TextDisplay.ScrollToEnd();
-                                                        break;
                                                 }
                                             })
                                         );
@@ -372,22 +360,13 @@ namespace PackIt
                                     }
                                     // Reset for next packet
                                     _state = State.SOH;
-                                    continue;
                                 }
                                 continue;
                         }
-                        break;
                     }
 
 
                 }
-
-
-            }
-            catch (Exception err)
-            {
-
-            }
         }
     }
 }

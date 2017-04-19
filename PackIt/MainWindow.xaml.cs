@@ -45,8 +45,7 @@ namespace PackIt
         
         private Client _client;
         private Server _server;
-
-        private Thread _clientThread;
+        
         private Thread _serverThread;
 
         private State _state;
@@ -100,18 +99,7 @@ namespace PackIt
 
         private void Close_MouseDown(object sender, RoutedEventArgs e)
         {
-            if (IsClient)
-            {
-                try
-                {
-                    _clientThread.Abort();
-                }
-                catch (Exception err)
-                {
-                    
-                }
-            }
-            else if (!IsClient)
+            if (!IsClient)
             {
                 try { 
                     _serverThread.Abort();
@@ -223,6 +211,7 @@ namespace PackIt
                     connect_png.Visibility = Visibility.Visible;
                     _serverThread = new Thread(new ThreadStart(_server.SocketListener));
                     _serverThread.Start();
+                    AddrText.Text = _server.addr.ToString();
                 }
                 Connected();
             }
@@ -347,10 +336,12 @@ namespace PackIt
                 var acknowledge = new byte[1] {ACK};
                 var noAcknowledge = new byte[1] {NAK};
 
+                _client.Streamer.ReadTimeout = 1000;
+
                 while (numOfErrors < 3 && iter < _client.SendPackets.Count )
                 {
                     var sendPacket = _client.SendPackets[iter];
-
+                    
                     switch (IsHex)
                     {
                         case true:
@@ -402,15 +393,18 @@ namespace PackIt
                         to.Text = "TIMEOUT\n";
                         to.ApplyPropertyValue(TextElement.ForegroundProperty, Brushes.DarkRed);
                         TextDisplay.ScrollToEnd();
+                        StatusBarCOMPORT.Content = err.Message;
                         continue;
                     }
                     catch (Exception err)
                     {
                         var pc = new TextRange(TextDisplay.Document.ContentEnd, TextDisplay.Document.ContentEnd);
-                        pc.Text = "Port closed\n";
+                        pc.Text = "Server offline\n";
                         pc.ApplyPropertyValue(TextElement.ForegroundProperty, Brushes.DarkRed);
                         TextDisplay.ScrollToEnd();
 
+                        TextDisplay.AppendText(err.Message);
+                        
                         StatusBarText.Content = "Waiting";
 
                         leave_png.Visibility = Visibility.Visible;
