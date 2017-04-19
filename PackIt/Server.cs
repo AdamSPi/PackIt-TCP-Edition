@@ -68,13 +68,24 @@ namespace PackIt
         {
             ReceivePackets = new List<byte[]>();
             FileToSave = "Meep";
-
-            var addrs = Dns.GetHostAddresses(Dns.GetHostName());
-
-            foreach (var ip in addrs)
-                if (ip.AddressFamily == AddressFamily.InterNetwork)
-                    addr = ip;
             _state = State.SOH;
+
+            string host = Dns.GetHostName();
+            IPAddress[] addrs = Dns.GetHostAddresses(host);
+
+            foreach (IPAddress ip in addrs)
+            {
+                if (ip.AddressFamily == AddressFamily.InterNetwork)
+                {
+                    var meep = ip.ToString();
+                    var meeparr = meep.Split('.');
+                    // No VMware IPs
+                    if(meeparr[0] != "192")
+                    {
+                        addr = ip;
+                    }
+                }
+            }
         }
 
         // Start listening on socket for client connections/data

@@ -73,12 +73,8 @@ namespace PackIt
 
             InitializeComponent();
             InitializeWindow();
-
-            var addrs = Dns.GetHostAddresses(Dns.GetHostName());
-
-            foreach (var ip in addrs)
-                if (ip.AddressFamily == AddressFamily.InterNetwork)
-                    AddrText.Text = ip.ToString();
+            
+            AddrText.Text = _server.addr.ToString();
 
             _server.portNumber = int.Parse(PortText.Text);
             _client.portNumber = int.Parse(PortText.Text);
