@@ -88,15 +88,12 @@ namespace PackIt
 
         public void Connect()
         {
-            try
+            NetworkClient = new TcpClient();
+            if(!NetworkClient.ConnectAsync(addr, portNumber).Wait(1000))
             {
-                NetworkClient = new TcpClient(addr, portNumber);
-                Streamer = new NetworkStream(NetworkClient.Client);
+                throw new Exception("Failed to connect to "+addr);
             }
-            catch (Exception err)
-            {
-                throw err;
-            }
+            Streamer = new NetworkStream(NetworkClient.Client);
         }
 
         public bool TestConnection()

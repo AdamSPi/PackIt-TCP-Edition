@@ -203,6 +203,7 @@ namespace PackIt
                     try
                     {
                         _client.Connect();
+                        Connected();
                     }
                     catch (Exception er)
                     {
@@ -213,11 +214,11 @@ namespace PackIt
                 {
                     connect_not_png.Visibility = Visibility.Hidden;
                     connect_png.Visibility = Visibility.Visible;
+                    Connected();
                     _serverThread = new Thread(new ThreadStart(_server.SocketListener));
                     _serverThread.Start();
                     AddrText.Text = _server.addr.ToString();
                 }
-                Connected();
             }
             catch (Exception err)
             {
