@@ -104,7 +104,7 @@ namespace PackIt
                     while (Streamer.DataAvailable)
                     {
                         var recv = (byte) Streamer.ReadByte();
-                        if (recv == SOH)
+                        if (recv == SOH && _state != State.Data)
                         {
                             _state = State.SOH;
                         }

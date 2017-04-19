@@ -398,35 +398,13 @@ namespace PackIt
                         to.ApplyPropertyValue(TextElement.ForegroundProperty, Brushes.DarkRed);
                         TextDisplay.ScrollToEnd();
                         StatusBarCOMPORT.Content = err.Message;
-                        continue;
                     }
                     catch (Exception err)
                     {
                         var pc = new TextRange(TextDisplay.Document.ContentEnd, TextDisplay.Document.ContentEnd);
-                        pc.Text = "Server offline\n";
+                        pc.Text = "Server error\n";
                         pc.ApplyPropertyValue(TextElement.ForegroundProperty, Brushes.DarkRed);
                         TextDisplay.ScrollToEnd();
-
-                        TextDisplay.AppendText(err.Message);
-                        
-                        StatusBarText.Content = "Waiting";
-
-                        leave_png.Visibility = Visibility.Visible;
-                        send_not_png.Visibility = Visibility.Hidden;
-                        send_png.Visibility = Visibility.Visible;
-                        clear_not_png.Visibility = Visibility.Hidden;
-                        clear_png.Visibility = Visibility.Visible;
-                        file_not_png.Visibility = Visibility.Hidden;
-                        file_png.Visibility = Visibility.Visible;
-                        receive_not_png.Visibility = Visibility.Visible;
-                        receive_png.Visibility = Visibility.Hidden;
-
-                        DisconnectItem.IsEnabled = true;
-                        TransmitItem.IsEnabled = true;
-                        ReceiveItem.IsEnabled = true;
-                        OpenItem.IsEnabled = true;
-
-                        return;
                     }
 
                     // Either got a ACK or NAK
