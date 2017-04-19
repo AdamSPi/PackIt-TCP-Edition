@@ -15,9 +15,10 @@
             <ColumnDefinition Width="69*"/>
             <ColumnDefinition Width="331*"/>
         </Grid.ColumnDefinitions>
-        <Border Background="White" CornerRadius="1" Grid.ColumnSpan="2" MouseDown="Window_MouseDown"></Border>
+        <Border Background="White" CornerRadius="1" Grid.ColumnSpan="2" MouseDown="Window_MouseDown" Margin="-2,0,2,0">
+        </Border>
+
         <Label x:Name="TitleBar" Foreground="Gray" FontSize="10" FontFamily="./Fonts/Nunito-Regular.ttf#Nunito" Content="PackIt" Padding="0" Margin="247,2,385,583" RenderTransformOrigin="0.5,0.5" Grid.Column="1"/>
-        <ComboBox x:Name="COMPortBox" FontFamily="./Fonts/Nunito-Regular.ttf#Nunito" Margin="498,70,67,512" BorderThickness="0" Background="White" Grid.Column="1" Padding="4 0 0 0" SelectionChanged="COMPortBox_OnSelectionChanged"/>
         <ComboBox x:Name="CRCErrorBox" FontFamily="./Fonts/Nunito-Regular.ttf#Nunito" Margin="240,70,325,512" BorderThickness="0" Background="White" Grid.Column="1" Padding="4 0 0 0" SelectionChanged="CRCErrorBox_OnSelectionChanged">
             <ComboBoxItem Content="None"/>
             <ComboBoxItem Content="CRC Error w/ Recovery"/>
@@ -27,12 +28,11 @@
         <Label x:Name="FileName" FontFamily="./Fonts/Nunito-Regular.ttf#Nunito" Content="No file selected" Padding="0" Margin="12,52,113,531" Grid.ColumnSpan="2"/>
         <StatusBar x:Name="StatusBar" FontFamily="./Fonts/Nunito-Regular.ttf#Nunito" Background="Transparent" Margin="3,575,-3,1" Grid.ColumnSpan="2">
             <Label x:Name="StatusBarText" Content="Waiting" Padding="0" />
-            <Label x:Name="StatusBarPercent" Content="" Padding="0" />
             <Separator />
             <Label x:Name="StatusBarCOMPORT" Content="Not Connected" Padding="0" Width="617" />
         </StatusBar>
         <Label x:Name="Title" Content="PackIt" FontFamily="./Fonts/Nunito-Regular.ttf#Nunito" HorizontalAlignment="Left" Margin="42,7,0,0" VerticalAlignment="Top"/>
-        <RichTextBox x:Name="TextDisplay" IsReadOnly="True"  FontSize="14" FontFamily="./Fonts/Nunito-Regular.ttf#Nunito" HorizontalAlignment="Left" BorderThickness="0" Height="457" Margin="5,107,0,0" VerticalAlignment="Top" Width="790" Grid.ColumnSpan="2">
+        <RichTextBox x:Name="TextDisplay"  x:FieldModifier="public" IsReadOnly="True"  FontSize="14" FontFamily="./Fonts/Nunito-Regular.ttf#Nunito" HorizontalAlignment="Left" BorderThickness="0" Height="457" Margin="5,107,0,0" VerticalAlignment="Top" Width="790" Grid.ColumnSpan="2">
             <FlowDocument>
             </FlowDocument>
         </RichTextBox>
@@ -47,8 +47,8 @@
                 <MenuItem x:Name="DisconnectItem" IsEnabled="False" Header="Disconnect" HorizontalAlignment="Left" Click="Leave_png_OnMouseDown"></MenuItem>
                 <MenuItem x:Name="OpenItem"  Header="Open" HorizontalAlignment="Left" Click="File_MouseDown"></MenuItem>
                 <MenuItem x:Name="ModeItem"  Header="Mode" HorizontalAlignment="Left">
-                    <MenuItem x:Name="TransmitItem"  Header="Transmit" HorizontalAlignment="Left" Click="TransmitOnClick"></MenuItem>
-                    <MenuItem x:Name="ReceiveItem"  Header="Receive" HorizontalAlignment="Left" Click="ReceiveOnClick"></MenuItem>
+                    <MenuItem x:Name="TransmitItem"  Header="Client" HorizontalAlignment="Left" Click="TransmitOnClick"></MenuItem>
+                    <MenuItem x:Name="ReceiveItem"  Header="Server" HorizontalAlignment="Left" Click="ReceiveOnClick"></MenuItem>
                 </MenuItem>
                 <MenuItem x:Name="CloseItem"  Header="Close" Click="Close_MouseDown"></MenuItem>
             </MenuItem>
@@ -72,12 +72,12 @@
         <Image x:Name="transmit_png" Margin="148,71,499,515" Source="Images/transmit.png" Stretch="Fill" Grid.Column="1" />
         <Image x:Name="receive_png"  Visibility="Hidden" Margin="169,71,480,516" Source="Images/receive.png" Stretch="Fill" Grid.Column="1" />
 
-        <Image x:Name="port_png" Visibility="Hidden" Grid.Column="1" Margin="475,69,167,511" Source="Images/port.png" Stretch="Fill"/>
-        <Image x:Name="port_not_png" Grid.Column="1" Margin="475,69,167,511" Source="Images/port_not.png" Stretch="Fill" MouseDown="PortOnClick" />
+        <Image x:Name="port_png" Visibility="Hidden" Grid.Column="1" Margin="529,69,113,511" Source="Images/port.png" Stretch="Fill"/>
+        <Image x:Name="port_not_png" Grid.Column="1" Margin="529,70,113,510" Source="Images/port_not.png" Stretch="Fill" MouseDown="PortOnClick" />
 
         <Image x:Name="bug_png" Grid.Column="1" Margin="217,72,430,513" Source="Images/bug.png" Stretch="Fill"/>
 
-        <Label x:Name="Test" FontFamily="./Fonts/Nunito-Regular.ttf#Nunito" Content="Test" Padding="0" Margin="397,71,220,512" RenderTransformOrigin="0.965,0.431" Grid.Column="1"/>
+        <Label x:Name="Test" FontFamily="./Fonts/Nunito-Regular.ttf#Nunito" Content="Test" Padding="0" Margin="400,71,217,512" RenderTransformOrigin="0.965,0.431" Grid.Column="1"/>
         <Image x:Name="test_png" Grid.Column="1" Margin="425,72,222,513" Source="Images/test.png" Stretch="Fill" MouseDown="Test_png_OnMouseDown"/>
         <Image x:Name="test_not_png" Visibility="Hidden" Grid.Column="1" Margin="425,72,222,513" Source="Images/test_not.png" Stretch="Fill"/>
 
@@ -91,9 +91,13 @@
         <Image x:Name="send_not_png" Margin="29,68,90,512" Source="Images/send_not.png" Stretch="Fill"/>
 
         <Label x:Name="Serial" FontFamily="./Fonts/Nunito-Regular.ttf#Nunito" Content="Connection Status" Padding="0" Margin="555,52,4,531" RenderTransformOrigin="0.965,0.431" Grid.Column="1"/>
-        <Image x:Name="leave_png" Visibility="Hidden" Margin="456,70,188,512" Source="Images/leave.png" Stretch="Fill" Grid.Column="1" MouseDown="Leave_png_OnMouseDown"/>
+        <Image x:Name="leave_png" Visibility="Hidden" Margin="506,71,138,511" Source="Images/leave.png" Stretch="Fill" Grid.Column="1" MouseDown="Leave_png_OnMouseDown"/>
         <Image x:Name="connect_not_png" Margin="605,69,37,511" Source="Images/connect_not.png" Stretch="Fill" Grid.Column="1"/>
         <Image x:Name="connected2_png" Visibility="Hidden" Grid.Column="1" Margin="637,72,10,513" Source="Images/connected2.png" Stretch="Fill"/>
+
+        <TextBox x:Name="AddrText" BorderThickness="0" FontFamily="./Fonts/Nunito-Regular.ttf#Nunito" Grid.Column="1" TextChanged="AddrText_OnTextChanged" PreviewTextInput="PortText_OnPreviewTextInput" TextAlignment="Right" HorizontalAlignment="Left" Height="17" Margin="549,35,0,0" TextWrapping="Wrap" Text="10.0.1.110" VerticalAlignment="Top" MaxLength="15" Width="106" Padding="0" />
+
+        <TextBox x:Name="PortText" BorderThickness="0"  FontFamily="./Fonts/Nunito-Regular.ttf#Nunito" Grid.Column="1" TextChanged="PortText_OnTextChanged" PreviewTextInput="PortText_OnPreviewTextInput" HorizontalAlignment="Left" Height="17" Margin="563,71,0,0" TextWrapping="Wrap" Text="5000" MaxLength="5" VerticalAlignment="Top" Width="41" Padding="0"/>
 
     </Grid>
 </Window>

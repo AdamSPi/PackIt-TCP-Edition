@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net;
+using System.Net.Sockets;
 using System.IO;
 using System.IO.Ports;
+using System.Threading;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -39,10 +42,12 @@ namespace PackIt
         private byte[] _data;
         private int _totalRead;
         private int _totalLeft;
+        
+        private Client _client;
+        private Server _server;
 
-        private SerialPort _port;
-        private Transmitter _transmitter;
-        private Receiver _receiver;
+        private Thread _clientThread;
+        private Thread _serverThread;
 
         private State _state;
         private ErrorRecovery _errorRecovery = ErrorRecovery.NONE;
@@ -57,40 +62,31 @@ namespace PackIt
         private const byte CR = 0x0D;
         private const byte SOH = 0x01;
 
-        public bool IsTransmit = true;
+        public bool IsClient = true;
         public bool IsHex = true;
         public bool IsConnected = false;
         public bool IsTested = false;
 
         public MainWindow()
         {
-
-            _port = new SerialPort();
-            _transmitter = new Transmitter();
-            _receiver = new Receiver();
+            _client = new Client();
+            _server = new Server();
 
             InitializeComponent();
-            InitializeComPort();
+            InitializeWindow();
+            _server.addr = IPAddress.Parse(AddrText.Text);
+            _client.addr = AddrText.Text;
+
+            _server.portNumber = int.Parse(PortText.Text);
+            _client.portNumber = int.Parse(PortText.Text);
         }
 
-        public void InitializeComPort()
+        public void InitializeWindow()
         {
-            foreach (var port in SerialPort.GetPortNames())
-            {
-                COMPortBox.Items.Add(port);
-                COMPortBox.SelectedValue = port;
-                _port.PortName = port;
-            }
             CRCErrorBox.SelectedIndex = 0;
-            _port.BaudRate = 4800;
-            _port.DataBits = 8;
-            _port.StopBits = StopBits.One;
-            _port.Parity = Parity.None;
-            _port.Handshake = Handshake.None;
 
             TextDisplay.AppendText("\n");
             _state = State.SOH;
-            _port.DataReceived += new SerialDataReceivedEventHandler(DataReceived);
         }
 
         private void Window_MouseDown(object sender, MouseButtonEventArgs e)
@@ -104,6 +100,28 @@ namespace PackIt
 
         private void Close_MouseDown(object sender, RoutedEventArgs e)
         {
+            if (IsClient)
+            {
+                try
+                {
+                    _clientThread.Abort();
+                }
+                catch (Exception err)
+                {
+                    
+                }
+            }
+            else if (!IsClient)
+            {
+                try { 
+                    _serverThread.Abort();
+                }
+                catch (Exception err)
+                {
+
+                }
+        }
+            
             Close();
         }
 
@@ -117,7 +135,7 @@ namespace PackIt
             var openFileDialog = new OpenFileDialog();
             if (openFileDialog.ShowDialog() == true)
             {
-                _transmitter.PacketizeFile(openFileDialog.FileName);
+                _client.PacketizeFile(openFileDialog.FileName);
                 FileName.Content = openFileDialog.FileName;
                 if (IsConnected && IsTested)
                 {
@@ -138,9 +156,10 @@ namespace PackIt
             file_png.Visibility = Visibility.Visible;
             file_not_png.Visibility = Visibility.Hidden;
             StatusBarText.Content = "Waiting";
-            StatusBarCOMPORT.Content = "Ready to send";
-            IsTransmit = true;
+            StatusBarCOMPORT.Content = "Client";
+            IsClient = true;
             OpenItem.IsEnabled = true;
+            AddrText.IsEnabled = true;
         }
 
         private void ReceiveOnClick(object sender, RoutedEventArgs e)
@@ -158,10 +177,11 @@ namespace PackIt
             test_not_png.Visibility = Visibility.Visible;
             test_png.Visibility = Visibility.Hidden;
             StatusBarText.Content = "Waiting";
-            StatusBarCOMPORT.Content = "Ready to receive";
+            StatusBarCOMPORT.Content = "Server";
             FileName.Content = "No file selected";
-            IsTransmit = false;
+            IsClient = false;
             OpenItem.IsEnabled = false;
+            AddrText.IsEnabled = false;
         }
 
         private void HexOnClick(object sender, RoutedEventArgs e)
@@ -186,7 +206,24 @@ namespace PackIt
         {
             try
             {
-                _port.Open();
+                if (IsClient)
+                {
+                    try
+                    {
+                        _client.Connect();
+                    }
+                    catch (Exception er)
+                    {
+                        StatusBarCOMPORT.Content = er.Message;
+                    }
+                }
+                else
+                {
+                    connect_not_png.Visibility = Visibility.Hidden;
+                    connect_png.Visibility = Visibility.Visible;
+                    _serverThread = new Thread(new ThreadStart(_server.SocketListener));
+                    _serverThread.Start();
+                }
                 Connected();
             }
             catch (Exception err)
@@ -199,7 +236,15 @@ namespace PackIt
         {
             try
             {
-                _port.Close();
+                if (IsClient)
+                {
+                    _client = new Client();
+                }
+                else
+                {
+                    _serverThread.Abort();
+                    _server = new Server();
+                }
                 Disconnected();
             }
             catch (Exception err)
@@ -208,7 +253,7 @@ namespace PackIt
             }
         }
 
-        private void Connected()
+        public void Connected()
         {
             disconnect_png.Visibility = Visibility.Hidden;
             not_connected_png.Visibility = Visibility.Hidden;
@@ -224,7 +269,14 @@ namespace PackIt
             ConnectItem.IsEnabled = false;
             IsConnected = true;
 
-            StatusBarCOMPORT.Content = "Connected to " + _port.PortName;
+            if (IsClient)
+            {
+                StatusBarCOMPORT.Content = "Connected to " + AddrText.Text;
+            }
+            else
+            {
+                StatusBarCOMPORT.Content = "Listening on " + _server.addr;
+            }
         }
 
         private void Disconnected()
@@ -256,19 +308,6 @@ namespace PackIt
             StatusBarText.Content = "Waiting";
         }
 
-        private void COMPortBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            try
-            {
-                var text = (sender as ComboBox).SelectedItem as string;
-                _port.PortName = text;
-            }
-            catch (Exception)
-            {
-                StatusBarCOMPORT.Content = "Disconnect before switching coms";
-            }
-        }
-
         private void Clear_png_OnMouseDown(object sender, MouseButtonEventArgs e)
         {
             FileName.Content = "No file selected";
@@ -280,7 +319,7 @@ namespace PackIt
 
         private void Send_png_OnMouseDown(object sender, MouseButtonEventArgs e)
         {
-            if (IsConnected && IsTested)
+            if (IsConnected && IsTested && IsClient)
             {
                 StatusBarText.Content = "Transmitting";
 
@@ -306,9 +345,9 @@ namespace PackIt
                 var acknowledge = new byte[1] {ACK};
                 var noAcknowledge = new byte[1] {NAK};
 
-                while (numOfErrors < 3 && iter < _transmitter.SendPackets.Count )
+                while (numOfErrors < 3 && iter < _client.SendPackets.Count )
                 {
-                    var sendPacket = _transmitter.SendPackets[iter];
+                    var sendPacket = _client.SendPackets[iter];
 
                     switch (IsHex)
                     {
@@ -351,8 +390,8 @@ namespace PackIt
                     var byteToRead = 0;
                     try
                     {
-                        _port.Write(sendPacket, 0, sendPacket.Length);
-                        byteToRead = _port.ReadByte();
+                        _client.Streamer.Write(sendPacket, 0, sendPacket.Length);
+                        byteToRead = _client.Streamer.ReadByte();
                     }
                     catch (TimeoutException err)
                     {
@@ -441,7 +480,7 @@ namespace PackIt
                 {
                     TextDisplay.AppendText("Too many errors :/\n");
                     TextDisplay.ScrollToEnd();
-                    _port.Close();
+                    _client.Streamer.Close();
                     Disconnected();
                 }
                 else
@@ -468,7 +507,7 @@ namespace PackIt
                 OpenItem.IsEnabled = true;
 
                 errorFlag = false;
-                _transmitter.SendPackets.Clear();
+                _client.SendPackets.Clear();
             }
 
         }
@@ -493,35 +532,20 @@ namespace PackIt
 
         private void Test_png_OnMouseDown(object sender, MouseButtonEventArgs e)
         {
-            if (!IsConnected)
+            if (!IsConnected || !IsClient)
             {
                 return;
             }
             StatusBarText.Content = "Connecting";
-            var chkConn = new byte[1];
-            chkConn[0] = (byte) 5;
-            _port.Write(System.Text.Encoding.Default.GetString(chkConn));
-            var response = 255;
-            _port.ReadTimeout = 1000;
+            var res = _client.TestConnection();
 
-            try
+            switch (res)
             {
-                response = _port.ReadByte();
-            }
-            catch (Exception err)
-            {
-                StatusBarCOMPORT.Content = err.Message;
-                StatusBarText.Content = "Waiting";
-                return;
-            }
-
-            switch (response)
-            {
-                case NAK:
+                case false:
                     StatusBarCOMPORT.Content = "Failure...";
                     StatusBarText.Content = "Waiting";
                     break;
-                case ACK:
+                case true:
                     connect_not_png.Visibility = Visibility.Hidden;
                     connect_png.Visibility = Visibility.Visible;
 
@@ -563,194 +587,37 @@ namespace PackIt
 
         }
 
-        private void DataReceived(object sender, SerialDataReceivedEventArgs e)
+        public void DataReceived()
         {
-            if(IsConnected  && !IsTransmit) { 
-            var packet = new byte[7];
-            var response = new byte[1];
-            while (_port.BytesToRead > 0)
+            
+        }
+
+
+        private void PortText_OnPreviewTextInput(object sender, TextCompositionEventArgs e)
+        {
+            if (char.IsDigit(e.Text, e.Text.Length - 1) || e.Text.Equals("."))
+                e.Handled = false;
+            else
             {
-                var temp = (byte)_port.ReadByte();
-                if (temp == SOH)
-                {
-                    _state = State.SOH;
-                }
-                else if(_state == State.SOH)
-                {
-                    if (temp == ENQ)
-                    {
-                        response[0] = ACK;
-                        _port.Write(response, 0, response.Length);
-                        Dispatcher.Invoke(delegate
-                        {
-                            connect_png.Visibility = Visibility.Visible;
-                            connect_not_png.Visibility = Visibility.Hidden;
-                        });
-                        return;
-                    }
-                    else
-                    {
-                        packet[0] = temp;
-                        _port.ReadTimeout = 1000;
-                        for (var i = 1; i < SIZE_OF_PACKET; i++)
-                        {
-                            try
-                            {
-                                temp = (byte) _port.ReadByte();
-                                packet[i] = temp;
-                            }
-                            catch (Exception err)
-                            {
-                                i = 7;
-                            }
-                        }
-                        Dispatcher.Invoke(delegate
-                        {
-                            switch (IsHex)
-                            {
-                                case true:
-                                    var hx = new TextRange(TextDisplay.Document.ContentEnd, TextDisplay.Document.ContentEnd);
-                                    hx.Text = " Recv: " + BitConverter.ToString(packet).Replace('-', ' ') + "\n";
-                                    hx.ApplyPropertyValue(TextElement.ForegroundProperty, Brushes.DarkRed);
-                                    TextDisplay.ScrollToEnd();
-                                    break;
-                                case false:
-                                    var tx = new TextRange(TextDisplay.Document.ContentEnd, TextDisplay.Document.ContentEnd);
-                                    tx.Text = " Recv: " + System.Text.Encoding.ASCII.GetString(packet) +"\n";
-                                    tx.ApplyPropertyValue(TextElement.ForegroundProperty, Brushes.DarkRed);
-                                    TextDisplay.ScrollToEnd();
-                                    break;
-                            }
-                        });
-
-                        response[0] = NAK;
-                        _port.Write(response, 0, response.Length);
-                    }
-                }
-                switch (_state)
-                {
-                    case State.SOH:
-                        if (temp == SOH)
-                        {
-                            _state = State.Data;
-                            _data = new byte[7];
-                            _totalRead = 0;
-                            _totalLeft = SIZE_OF_PACKET;
-                            _data[_totalRead] = temp;
-                            _totalRead++;
-                            _totalLeft--;
-                        }
-                        continue;
-                    case State.Data:
-                        _data[_totalRead] = temp;
-                        _totalRead++;
-                        _totalLeft--;
-
-                        if (_totalLeft < 1)
-                        {
-                            // TODO: Only check CRC byte for 0
-                            if (new CRC_Class(_data).crcCalc() == 0)
-                            {
-                                response[0] = ACK;
-                                _port.Write(response, 0, response.Length);
-
-                                Dispatcher.Invoke(delegate { 
-                                    switch (IsHex)
-                                    {
-                                        case true:
-                                            TextDisplay.AppendText("Recv: " + BitConverter.ToString(_data).Replace('-', ' ') +
-                                                                   "\n");
-                                            TextDisplay.ScrollToEnd();
-                                            break;
-                                        case false:
-                                            TextDisplay.AppendText("Recv: " + System.Text.Encoding.ASCII.GetString(_data) +
-                                                                   "\n");
-                                            TextDisplay.ScrollToEnd();
-                                            break;
-                                    }
-                                });
-
-                                _receiver.ReceivePackets.Add(_data);
-
-                                foreach (var bytes in _data)
-                                {
-                                    // TODO: Only check CRC byte for EOT
-                                    if (bytes == EOT)
-                                    {
-                                        if (!string.IsNullOrEmpty(_receiver.FileToSave))
-                                        {
-                                            SaveFileDialog saveDialog = new SaveFileDialog();
-                                            if (saveDialog.ShowDialog() == true)
-                                            {
-                                                _receiver.FileToSave = saveDialog.FileName;
-                                                if (_receiver.ReceivePackets.Count > 0)
-                                                {
-                                                    StringBuilder stringBuilder = new StringBuilder();
-                                                    var count = 5;
-                                                    char[] charlie = new char[7];
-                                                    foreach (byte[] bagets in _receiver.ReceivePackets)
-                                                    {
-                                                        for (var i = 1; i < bagets.Length - 1; i++)
-                                                        {
-                                                            charlie[i] = (char) bagets[i];
-                                                            if (bagets[i] == EOT)
-                                                                count = i - 1;
-                                                        }
-                                                        // Append just data no soh or crc
-                                                        stringBuilder.Append(charlie, 1, count);
-                                                    }
-                                                    var dest = new char[stringBuilder.Length];
-                                                    stringBuilder.CopyTo(0, dest, 0, stringBuilder.Length);
-                                                    var final = new byte[dest.Length];
-                                                    for(var i = 0; i < dest.Length; i++)
-                                                    {
-                                                        final[i] = (byte) dest[i];
-                                                    }
-                                                    File.WriteAllBytes(_receiver.FileToSave, final);
-                                                    Dispatcher.Invoke(delegate {
-                                                        TextDisplay.AppendText("Successful transfer\n");
-                                                        StatusBarCOMPORT.Content = "File Successfully Saved!";
-                                                    });
-                                                }
-                                            }
-                                        }
-                                        _receiver.ReceivePackets.Clear();
-                                    }
-                                }
-                            }
-                            // Bad Packets go here...
-                            else
-                            {
-                                response[0] = NAK;
-                                _port.Write(response, 0, response.Length);
-                                Dispatcher.Invoke(delegate {
-                                    switch (IsHex)
-                                    {
-                                        case true:
-                                            var hx = new TextRange(TextDisplay.Document.ContentEnd, TextDisplay.Document.ContentEnd);
-                                            hx.Text = " Recv: " + BitConverter.ToString(_data).Replace('-', ' ') + "\n";
-                                            hx.ApplyPropertyValue(TextElement.ForegroundProperty, Brushes.DarkRed);
-                                            TextDisplay.ScrollToEnd();
-                                            break;
-                                        case false:
-                                            var tx = new TextRange(TextDisplay.Document.ContentEnd, TextDisplay.Document.ContentEnd);
-                                            tx.Text = " Recv: " + System.Text.Encoding.ASCII.GetString(_data) + "\n";
-                                            tx.ApplyPropertyValue(TextElement.ForegroundProperty, Brushes.DarkRed);
-                                            TextDisplay.ScrollToEnd();
-                                            break;
-                                    }
-                                });
-                                
-                            }
-                            // Reset for next packet
-                            _state = State.SOH;
-                            continue;
-                        }
-                        continue;
-                }
-                        break;
-                }
+                e.Handled = true;
             }
+        }
+
+        private void PortText_OnTextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (IsClient)
+            {
+                _client.portNumber = int.Parse(PortText.Text);
+            }
+            else
+            {
+                _server.portNumber = int.Parse(PortText.Text);
+            }
+        }
+
+        private void AddrText_OnTextChanged(object sender, TextChangedEventArgs e)
+        {
+            _client.addr = AddrText.Text;
         }
     }
 }

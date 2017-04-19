@@ -3,13 +3,16 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Net;
+using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using static PackIt.Packet;
 
 namespace PackIt
 {
-    class Transmitter
+    class Client
     {
         // program constant definitions
         private const int SIZE_OF_PACKET = 7;
@@ -29,12 +32,18 @@ namespace PackIt
         private byte[] chkConn;         // byte[] used for serial port send
         private byte[] nak;
         private byte[] ack;
-        
+
+
         // lists to hold packets on both sender and receiver sides
         public List<byte[]> SendPackets;   // stores packets to be sent
         private Packet _packet;
-        
-        public Transmitter()
+
+        public TcpClient NetworkClient;
+        public NetworkStream Streamer;
+        public string addr;
+        public int portNumber = 5000;
+
+        public Client()
         {
             SendPackets = new List<byte[]>();
             _packet = new Packet();
@@ -76,6 +85,52 @@ namespace PackIt
             }
             streamer.Close();
         }
-        
+
+        public void Connect()
+        {
+            try
+            {
+                NetworkClient = new TcpClient(addr, portNumber);
+                Streamer = new NetworkStream(NetworkClient.Client);
+            }
+            catch (Exception err)
+            {
+            }
+        }
+
+        public bool TestConnection()
+        {
+            try
+            {
+                Streamer = NetworkClient.GetStream();
+            }
+            catch (Exception er)
+            {
+                return false;
+            }
+            var nquire = new byte[1];
+            nquire[0] = ENQ;
+            Streamer.Write(nquire, 0, 1);
+
+            Streamer.ReadTimeout = 1000;
+            var recv = 0;
+            try
+            {
+                recv = Streamer.ReadByte();
+            }
+            catch (Exception er)
+            {
+                return false;
+            }
+
+            switch (recv)
+            {
+                case ACK:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
     }
 }
