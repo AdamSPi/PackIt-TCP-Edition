@@ -29,6 +29,9 @@
         <StatusBar x:Name="StatusBar" FontFamily="./Fonts/Nunito-Regular.ttf#Nunito" Background="Transparent" Margin="3,575,-3,1" Grid.ColumnSpan="2">
             <Label x:Name="StatusBarText" Content="Waiting" Padding="0" />
             <Separator />
+            <ProgressBar BorderThickness="0" x:Name="ProgressBar" Width="100" Height="15"></ProgressBar>
+            <Label x:Name="Percent" Content="0%" Padding="0" Width="34" />
+            <Separator />
             <Label x:Name="StatusBarCOMPORT" Content="Not Connected" Padding="0" Width="617" />
         </StatusBar>
         <Label x:Name="Title" Content="PackIt" FontFamily="./Fonts/Nunito-Regular.ttf#Nunito" HorizontalAlignment="Left" Margin="42,7,0,0" VerticalAlignment="Top"/>

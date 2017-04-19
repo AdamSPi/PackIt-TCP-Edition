@@ -91,7 +91,7 @@ namespace PackIt
                 // Wait for connection to establish
                 ConnectededClient = await sockListener.AcceptTcpClientAsync();
 
-                Application.Current.Dispatcher.BeginInvoke(
+                await Application.Current.Dispatcher.BeginInvoke(
                     DispatcherPriority.Background,
                     new Action(() =>
                     {
@@ -118,7 +118,7 @@ namespace PackIt
                             {
                                 response[0] = ACK;
                                 Streamer.Write(response, 0, response.Length);
-                                Application.Current.Dispatcher.BeginInvoke(
+                                await Application.Current.Dispatcher.BeginInvoke(
                                     DispatcherPriority.Background,
                                     new Action(() =>
                                         {
@@ -149,7 +149,7 @@ namespace PackIt
                                     }
                                 }
 
-                                Application.Current.Dispatcher.BeginInvoke(
+                                await Application.Current.Dispatcher.BeginInvoke(
                                     DispatcherPriority.Background,
                                     new Action(() =>
                                         {
@@ -218,7 +218,7 @@ namespace PackIt
                                         response[0] = ACK;
                                         Streamer.Write(response, 0, response.Length);
 
-                                        Application.Current.Dispatcher.BeginInvoke(
+                                        await Application.Current.Dispatcher.BeginInvoke(
                                             DispatcherPriority.Background,
                                             new Action(() =>
                                             {
@@ -288,7 +288,7 @@ namespace PackIt
                                                                 final[i] = (byte) dest[i];
                                                             }
                                                             File.WriteAllBytes(FileToSave, final);
-                                                            Application.Current.Dispatcher.BeginInvoke(
+                                                            await Application.Current.Dispatcher.BeginInvoke(
                                                                 DispatcherPriority.Background,
                                                                 new Action(() =>
                                                                     {
@@ -301,6 +301,15 @@ namespace PackIt
                                                                                     .MainWindow).StatusBarCOMPORT
                                                                             .Content =
                                                                             "File Successfully Saved!";
+                                                                        ((MainWindow)
+                                                                                System.Windows.Application.Current
+                                                                                    .MainWindow).Percent
+                                                                            .Content =
+                                                                            "100%";
+                                                                        ((MainWindow)
+                                                                                System.Windows.Application.Current
+                                                                                    .MainWindow).ProgressBar.Value =
+                                                                            100;
                                                                     }
                                                                 )
                                                             );
@@ -317,7 +326,7 @@ namespace PackIt
                                         response[0] = NAK;
                                         Streamer.Write(response, 0, response.Length);
 
-                                        Application.Current.Dispatcher.BeginInvoke(
+                                        await Application.Current.Dispatcher.BeginInvoke(
                                             DispatcherPriority.Background,
                                             new Action(() =>
                                             {

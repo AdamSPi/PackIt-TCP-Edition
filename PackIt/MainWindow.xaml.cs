@@ -315,6 +315,8 @@ namespace PackIt
             send_not_png.Visibility = Visibility.Visible;
             send_png.Visibility = Visibility.Hidden;
             TextDisplay.AppendText("\n");
+            ProgressBar.Value = 0;
+            Percent.Content = "0%";
         }
 
         private void Send_png_OnMouseDown(object sender, MouseButtonEventArgs e)
@@ -485,6 +487,8 @@ namespace PackIt
                 }
                 else
                 {
+                    ProgressBar.Value = 100;
+                    Percent.Content = "100%";
                     TextDisplay.AppendText("Success\n");
                     TextDisplay.ScrollToEnd();
                 }
