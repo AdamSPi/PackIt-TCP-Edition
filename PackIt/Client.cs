@@ -90,11 +90,13 @@ namespace PackIt
         {
             try
             {
+                NetworkClient.ReceiveTimeout = 1000;
                 NetworkClient = new TcpClient(addr, portNumber);
                 Streamer = new NetworkStream(NetworkClient.Client);
             }
             catch (Exception err)
             {
+                throw err;
             }
         }
 

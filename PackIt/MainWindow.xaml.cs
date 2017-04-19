@@ -73,8 +73,6 @@ namespace PackIt
 
             InitializeComponent();
             InitializeWindow();
-            _server.addr = IPAddress.Parse(AddrText.Text);
-            _client.addr = AddrText.Text;
 
             _server.portNumber = int.Parse(PortText.Text);
             _client.portNumber = int.Parse(PortText.Text);
