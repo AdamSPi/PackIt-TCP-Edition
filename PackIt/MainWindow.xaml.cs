@@ -482,6 +482,7 @@ namespace PackIt
                     TextDisplay.ScrollToEnd();
                     _client.Streamer.Close();
                     Disconnected();
+                    _client.SendPackets.Clear();    
                 }
                 else
                 {
@@ -489,6 +490,7 @@ namespace PackIt
                     Percent.Content = "100%";
                     TextDisplay.AppendText("Success\n");
                     TextDisplay.ScrollToEnd();
+                    _client.SendPackets.Clear();
                 }
 
                 StatusBarText.Content = "Waiting";
