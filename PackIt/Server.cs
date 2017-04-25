@@ -92,8 +92,21 @@ namespace PackIt
         public async void SocketListener()
         {
             var sockListener = new TcpListener(addr, portNumber);
-            sockListener.Start();
-
+            try
+            {
+                sockListener.Start();
+            }
+            catch (Exception e)
+            {
+                await Application.Current.Dispatcher.BeginInvoke(
+                DispatcherPriority.Background,
+                new Action(() =>
+                 {
+                    ((MainWindow)System.Windows.Application.Current.MainWindow).StatusBarCOMPORT.Content = "Port already in use";
+                })
+                );
+                return;
+            }
 
             // Wait for connection to establish
             ConnectededClient = await sockListener.AcceptTcpClientAsync();
@@ -103,7 +116,7 @@ namespace PackIt
                 new Action(() =>
                 {
                     ((MainWindow)System.Windows.Application.Current.MainWindow).TextDisplay.AppendText(
-                        "Client connected from " + ConnectededClient.Client.RemoteEndPoint + "\n");
+                        "Client connected from " + ConnectededClient.Client.RemoteEndPoint.ToString().Split(':')[0] + "\n");
                 })
             );
 

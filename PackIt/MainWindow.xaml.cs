@@ -210,9 +210,9 @@ namespace PackIt
                 {
                     connect_not_png.Visibility = Visibility.Hidden;
                     connect_png.Visibility = Visibility.Visible;
-                    Connected();
                     _serverThread = new Thread(new ThreadStart(_server.SocketListener));
                     _serverThread.Start();
+                    Connected();
                     AddrText.Text = _server.addr.ToString();
                 }
             }
